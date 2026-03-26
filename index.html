@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Idea Vault">
+<meta name="theme-color" content="#F6F5F0">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Idea Vault</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+<style>
+:root {
+  --bg: #F6F5F0;
+  --surface: #FFFFFF;
+  --surface-hover: #F0EDE6;
+  --card: #FFFFFF;
+  --card-border: #E4E0D8;
+  --accent: #2D6A4F;
+  --accent-dim: rgba(45,106,79,0.1);
+  --accent-glow: rgba(45,106,79,0.06);
+  --text: #1A1A1A;
+  --text-muted: #6B6B6B;
+  --text-dim: #AAAAAA;
+  --recording: #E63946;
+  --recording-glow: rgba(230,57,70,0.25);
+  --tag-bg: rgba(45,106,79,0.08);
+  --tag-border: rgba(45,106,79,0.25);
+}
+
+* {
+  margin: 0; padding: 0; box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Pretendard Variable', 'Pretendard', 'Apple SD Gothic Neo', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+.ambient {
+  position: fixed; top: -200px; right: -200px;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+.container {
+  max-width: 720px; margin: 0 auto;
+  padding: 40px 20px 140px;
+  position: relative; z-index: 1;
+}
+
+/* Intro */
+.intro-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg);
+  animation: fadeOut 0.5s ease 1.5s forwards;
+}
+.intro-title {
+  font-size: 42px; font-weight: 800; letter-spacing: -2px;
+  color: var(--accent);
+  animation: pulseIn 0.6s ease-out;
+}
+
+/* Header */
+header { margin-bottom: 36px; }
+.header-row {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 6px;
+}
+.dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+}
+h1 {
+  font-size: 28px; font-weight: 800; letter-spacing: -1.5px;
+}
+.subtitle {
+  font-size: 13px; color: var(--text-muted); padding-left: 22px;
+}
+
+/* Search */
+.search-wrap { position: relative; margin-bottom: 20px; }
+.search-icon {
+  position: absolute; left: 14px; top: 50%;
+  transform: translateY(-50%); color: var(--text-dim); font-size: 15px;
+}
+.search-input {
+  width: 100%; padding: 12px 14px 12px 38px;
+  background: var(--surface); border: 1px solid var(--card-border);
+  border-radius: 12px; color: var(--text); font-size: 14px;
+  outline: none; transition: border-color 0.2s; font-family: inherit;
+}
+.search-input:focus { border-color: rgba(232,255,71,0.4); }
+.search-input::placeholder { color: var(--text-dim); }
+
+/* Category Filter */
+.cat-filter {
+  display: flex; gap: 6px; margin-bottom: 28px;
+  overflow-x: auto; padding-bottom: 4px;
+  -ms-overflow-style: none; scrollbar-width: none;
+}
+.cat-filter::-webkit-scrollbar { display: none; }
+.cat-btn {
+  padding: 7px 14px; border-radius: 20px;
+  border: 1px solid var(--card-border);
+  background: transparent; color: var(--text-muted);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  white-space: nowrap; transition: all 0.2s;
+  display: flex; align-items: center; gap: 5px;
+  font-family: inherit;
+}
+.cat-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+.cat-btn .count { opacity: 0.5; font-size: 11px; }
+.cat-btn .icon { font-size: 10px; }
+
+/* Input Area */
+.input-box {
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: 16px; padding: 16px;
+  margin-bottom: 32px; transition: all 0.3s;
+}
+.input-box.recording {
+  border-color: rgba(255,68,68,0.5);
+  box-shadow: 0 0 30px var(--recording-glow);
+}
+.input-textarea {
+  width: 100%; resize: none; background: transparent;
+  border: none; color: var(--text); font-size: 15px;
+  line-height: 1.6; outline: none; font-family: inherit;
+  min-height: 72px;
+}
+.input-textarea::placeholder { color: var(--text-dim); }
+.input-bottom {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid var(--card-border);
+}
+.cat-select { display: flex; gap: 4px; }
+.cat-sel-btn {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1px solid transparent; background: transparent;
+  color: var(--text-dim); font-size: 13px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; font-family: inherit;
+}
+.cat-sel-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+.action-btns { display: flex; gap: 8px; }
+.mic-btn {
+  width: 42px; height: 42px; border-radius: 50%;
+  border: none; cursor: pointer; font-size: 18px;
+  background: var(--surface-hover); color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.mic-btn.recording {
+  background: var(--recording); color: #fff;
+  animation: pulse 1.5s ease infinite;
+  box-shadow: 0 0 20px var(--recording-glow);
+}
+.save-btn {
+  height: 42px; padding: 0 20px; border-radius: 12px;
+  border: none; cursor: pointer; font-size: 13px; font-weight: 700;
+  background: var(--surface-hover); color: var(--text-dim);
+  transition: all 0.2s; letter-spacing: -0.3px; font-family: inherit;
+}
+.save-btn.active {
+  background: var(--accent); color: var(--bg); cursor: pointer;
+}
+
+/* Ideas List */
+.empty-state {
+  text-align: center; padding: 60px 20px; color: var(--text-dim);
+}
+.empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.3; }
+.empty-text { font-size: 14px; }
+
+.ideas-list { display: flex; flex-direction: column; gap: 10px; }
+
+.idea-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 14px; padding: 16px;
+  transition: all 0.2s;
+  animation: slideUp 0.3s ease both;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.idea-card.pinned { border-color: rgba(232,255,71,0.3); }
+
+.idea-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.idea-meta { display: flex; align-items: center; gap: 8px; }
+.idea-tag {
+  padding: 3px 10px; border-radius: 6px; font-size: 11px;
+  font-weight: 600; background: var(--tag-bg);
+  border: 1px solid var(--tag-border); color: var(--accent);
+  display: flex; align-items: center; gap: 4px;
+}
+.idea-tag .icon { font-size: 9px; }
+.idea-date { font-size: 11px; color: var(--text-dim); }
+.idea-actions { display: flex; gap: 2px; }
+.idea-action-btn {
+  width: 28px; height: 28px; border-radius: 6px;
+  border: none; cursor: pointer; background: transparent;
+  color: var(--text-dim); font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  transition: color 0.2s;
+}
+.idea-action-btn.pinned { color: var(--accent); }
+.idea-action-btn.editing { color: var(--accent); }
+.idea-action-btn:hover { color: var(--text); }
+.idea-action-btn.delete:hover { color: var(--recording); }
+
+.idea-text {
+  font-size: 14px; line-height: 1.7; white-space: pre-wrap;
+  word-break: break-word;
+}
+.edit-textarea {
+  width: 100%; resize: none; background: var(--surface);
+  border: 1px solid rgba(232,255,71,0.25); border-radius: 8px;
+  padding: 10px; color: var(--text); font-size: 14px;
+  line-height: 1.6; outline: none; font-family: inherit;
+  min-height: 72px;
+}
+
+/* Install Banner */
+.install-banner {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--surface); border-top: 1px solid var(--card-border);
+  padding: 16px 20px; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  animation: slideUp 0.4s ease;
+}
+.install-banner.hidden { display: none; }
+.install-text { font-size: 13px; color: var(--text-muted); flex: 1; }
+.install-text strong { color: var(--text); }
+.install-btn {
+  padding: 10px 18px; border-radius: 10px; border: none;
+  background: var(--accent); color: var(--bg);
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  font-family: inherit; white-space: nowrap;
+}
+.install-dismiss {
+  width: 32px; height: 32px; border-radius: 8px; border: none;
+  background: transparent; color: var(--text-dim);
+  font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 4px; }
+
+@keyframes fadeOut { to { opacity: 0; pointer-events: none; } }
+@keyframes pulseIn { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+</style>
+</head>
+<body>
+
+<div class="ambient"></div>
+
+<div class="intro-overlay" id="intro">
+  <div class="intro-title">IDEA VAULT</div>
+</div>
+
+<div class="container">
+  <header>
+    <div class="header-row">
+      <div class="dot"></div>
+      <h1>Idea Vault</h1>
+    </div>
+    <p class="subtitle">떠오르는 아이디어를 음성 또는 텍스트로 기록하세요</p>
+  </header>
+
+  <!-- Search -->
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input class="search-input" type="text" placeholder="아이디어 검색..." id="searchInput">
+  </div>
+
+  <!-- Category Filter -->
+  <div class="cat-filter" id="catFilter"></div>
+
+  <!-- Input Area -->
+  <div class="input-box" id="inputBox">
+    <textarea class="input-textarea" id="mainInput" placeholder="아이디어를 입력하세요..." rows="3"></textarea>
+    <div class="input-bottom">
+      <div class="cat-select" id="catSelect"></div>
+      <div class="action-btns">
+        <button class="mic-btn" id="micBtn">🎙</button>
+        <button class="save-btn" id="saveBtn">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ideas -->
+  <div id="ideasContainer"></div>
+</div>
+
+<!-- Install Banner -->
+<div class="install-banner hidden" id="installBanner">
+  <div class="install-text"><strong>Idea Vault</strong>를 홈 화면에 추가하세요</div>
+  <button class="install-btn" id="installBtn">설치</button>
+  <button class="install-dismiss" id="installDismiss">✕</button>
+</div>
+
+<script>
+const CATEGORIES = [
+  { id: 'all', label: '전체', icon: '◉' },
+  { id: 'business', label: '비즈니스', icon: '◆' },
+  { id: 'creative', label: '크리에이티브', icon: '✦' },
+  { id: 'tech', label: '기술', icon: '⬡' },
+  { id: 'life', label: '라이프', icon: '◐' },
+  { id: 'random', label: '기타', icon: '∿' },
+];
+
+let ideas = JSON.parse(localStorage.getItem('ideavault_ideas') || '[]');
+let currentFilter = 'all';
+let currentCategory = 'random';
+let isRecording = false;
+let editingId = null;
+let recognition = null;
+
+function save() {
+  localStorage.setItem('ideavault_ideas', JSON.stringify(ideas));
+}
+
+function formatDate(ts) {
+  const diff = Date.now() - ts;
+  if (diff < 60000) return '방금 전';
+  if (diff < 3600000) return Math.floor(diff/60000) + '분 전';
+  if (diff < 86400000) return Math.floor(diff/3600000) + '시간 전';
+  if (diff < 604800000) return Math.floor(diff/86400000) + '일 전';
+  return new Date(ts).toLocaleDateString('ko-KR', { month:'short', day:'numeric' });
+}
+
+function catInfo(id) {
+  return CATEGORIES.find(c => c.id === id) || CATEGORIES[5];
+}
+
+// Render filter buttons
+function renderFilters() {
+  const el = document.getElementById('catFilter');
+  el.innerHTML = CATEGORIES.map(cat => {
+    const count = cat.id === 'all' ? ideas.length : ideas.filter(i => i.category === cat.id).length;
+    return `<button class="cat-btn ${currentFilter === cat.id ? 'active' : ''}" data-filter="${cat.id}">
+      <span class="icon">${cat.icon}</span>${cat.label}<span class="count">${count}</span>
+    </button>`;
+  }).join('');
+  el.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.onclick = () => { currentFilter = btn.dataset.filter; render(); };
+  });
+}
+
+// Render category selector in input
+function renderCatSelect() {
+  const el = document.getElementById('catSelect');
+  el.innerHTML = CATEGORIES.filter(c => c.id !== 'all').map(cat =>
+    `<button class="cat-sel-btn ${currentCategory === cat.id ? 'active' : ''}" data-cat="${cat.id}" title="${cat.label}">${cat.icon}</button>`
+  ).join('');
+  el.querySelectorAll('.cat-sel-btn').forEach(btn => {
+    btn.onclick = () => { currentCategory = btn.dataset.cat; renderCatSelect(); };
+  });
+}
+
+// Render ideas
+function renderIdeas() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = ideas
+    .filter(i => currentFilter === 'all' || i.category === currentFilter)
+    .filter(i => !search || i.text.toLowerCase().includes(search))
+    .sort((a, b) => {
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      return b.createdAt - a.createdAt;
+    });
+
+  const container = document.getElementById('ideasContainer');
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">✦</div>
+      <p class="empty-text">${ideas.length === 0 ? '첫 번째 아이디어를 기록해보세요' : '검색 결과가 없습니다'}</p>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = `<div class="ideas-list">${filtered.map((idea, idx) => {
+    const cat = catInfo(idea.category);
+    const isEdit = editingId === idea.id;
+    return `<div class="idea-card ${idea.pinned ? 'pinned' : ''}" style="animation-delay:${idx*0.03}s">
+      <div class="idea-top">
+        <div class="idea-meta">
+          <span class="idea-tag"><span class="icon">${cat.icon}</span>${cat.label}</span>
+          <span class="idea-date">${formatDate(idea.createdAt)}</span>
+        </div>
+        <div class="idea-actions">
+          <button class="idea-action-btn ${idea.pinned ? 'pinned' : ''}" onclick="togglePin('${idea.id}')" title="${idea.pinned ? '고정 해제' : '고정'}">📌</button>
+          <button class="idea-action-btn ${isEdit ? 'editing' : ''}" onclick="${isEdit ? `saveEdit('${idea.id}')` : `startEdit('${idea.id}')`}" title="${isEdit ? '저장' : '수정'}">${isEdit ? '✓' : '✎'}</button>
+          <button class="idea-action-btn delete" onclick="deleteIdea('${idea.id}')" title="삭제">✕</button>
+        </div>
+      </div>
+      ${isEdit
+        ? `<textarea class="edit-textarea" id="edit-${idea.id}" rows="3">${idea.text}</textarea>`
+        : `<p class="idea-text">${idea.text.replace(/</g,'&lt;')}</p>`
+      }
+    </div>`;
+  }).join('')}</div>`;
+
+  // Focus edit textarea
+  if (editingId) {
+    const ta = document.getElementById('edit-' + editingId);
+    if (ta) {
+      ta.focus();
+      ta.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(editingId); }
+        if (e.key === 'Escape') { editingId = null; render(); }
+      });
+    }
+  }
+}
+
+function render() {
+  renderFilters();
+  renderCatSelect();
+  renderIdeas();
+  updateSaveBtn();
+}
+
+function updateSaveBtn() {
+  const btn = document.getElementById('saveBtn');
+  const has = document.getElementById('mainInput').value.trim();
+  btn.className = 'save-btn' + (has ? ' active' : '');
+}
+
+// Actions
+function addIdea() {
+  const input = document.getElementById('mainInput');
+  const text = input.value.trim();
+  if (!text) return;
+  ideas.unshift({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    text, category: currentCategory,
+    createdAt: Date.now(), pinned: false,
+  });
+  save(); input.value = ''; render();
+  input.focus();
+}
+
+function deleteIdea(id) {
+  ideas = ideas.filter(i => i.id !== id);
+  save(); render();
+}
+
+function togglePin(id) {
+  const idea = ideas.find(i => i.id === id);
+  if (idea) idea.pinned = !idea.pinned;
+  save(); render();
+}
+
+function startEdit(id) {
+  editingId = id;
+  render();
+}
+
+function saveEdit(id) {
+  const ta = document.getElementById('edit-' + id);
+  if (!ta || !ta.value.trim()) return;
+  const idea = ideas.find(i => i.id === id);
+  if (idea) idea.text = ta.value.trim();
+  editingId = null;
+  save(); render();
+}
+
+function toggleRecording() {
+  if (isRecording) {
+    recognition?.stop();
+    isRecording = false;
+    document.getElementById('micBtn').className = 'mic-btn';
+    document.getElementById('inputBox').className = 'input-box';
+    return;
+  }
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    alert('이 브라우저는 음성 인식을 지원하지 않습니다.\nChrome 또는 Safari를 사용해주세요.');
+    return;
+  }
+
+  recognition = new SR();
+  recognition.lang = 'ko-KR';
+  recognition.interimResults = true;
+  recognition.continuous = true;
+
+  const input = document.getElementById('mainInput');
+  const existingText = input.value;
+
+  recognition.onresult = (event) => {
+    let transcript = '';
+    for (let i = 0; i < event.results.length; i++) {
+      transcript += event.results[i][0].transcript;
+    }
+    input.value = existingText ? existingText + ' ' + transcript : transcript;
+    updateSaveBtn();
+  };
+
+  recognition.onerror = () => {
+    isRecording = false;
+    document.getElementById('micBtn').className = 'mic-btn';
+    document.getElementById('inputBox').className = 'input-box';
+  };
+  recognition.onend = () => {
+    isRecording = false;
+    document.getElementById('micBtn').className = 'mic-btn';
+    document.getElementById('inputBox').className = 'input-box';
+  };
+
+  recognition.start();
+  isRecording = true;
+  document.getElementById('micBtn').className = 'mic-btn recording';
+  document.getElementById('inputBox').className = 'input-box recording';
+  input.placeholder = '말씀하세요...';
+}
+
+// Event listeners
+document.getElementById('mainInput').addEventListener('input', updateSaveBtn);
+document.getElementById('mainInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addIdea(); }
+});
+document.getElementById('saveBtn').addEventListener('click', addIdea);
+document.getElementById('micBtn').addEventListener('click', toggleRecording);
+document.getElementById('searchInput').addEventListener('input', renderIdeas);
+
+// PWA Install
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBanner').classList.remove('hidden');
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+  }
+  document.getElementById('installBanner').classList.add('hidden');
+});
+document.getElementById('installDismiss').addEventListener('click', () => {
+  document.getElementById('installBanner').classList.add('hidden');
+});
+
+// Remove intro
+setTimeout(() => {
+  const intro = document.getElementById('intro');
+  if (intro) intro.remove();
+}, 2200);
+
+// Init
+render();
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
