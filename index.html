@@ -346,6 +346,7 @@ let currentCategory = 'random';
 let isRecording = false;
 let editingId = null;
 let recognition = null;
+let manualStop = false; // 수동 종료 플래그 — onend의 자동 재시작 차단용
 
 function save() {
   localStorage.setItem('ideavault_ideas', JSON.stringify(ideas));
@@ -460,10 +461,21 @@ function updateSaveBtn() {
 }
 
 // Actions
+// 음성 인식을 의도적으로 종료 — onend의 자동 재시작 차단
+function stopRecognition() {
+  manualStop = true;
+  recognition?.stop();
+  isRecording = false;
+  document.getElementById('micBtn').className = 'mic-btn';
+  document.getElementById('inputBox').className = 'input-box';
+  document.getElementById('mainInput').placeholder = '아이디어를 입력하세요...';
+}
+
 function addIdea() {
   const input = document.getElementById('mainInput');
   const text = input.value.trim();
   if (!text) return;
+  stopRecognition(); // 저장 시 음성 인식 강제 종료
   ideas.unshift({
     id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
     text, category: currentCategory,
@@ -500,10 +512,7 @@ function saveEdit(id) {
 
 function toggleRecording() {
   if (isRecording) {
-    recognition?.stop();
-    isRecording = false;
-    document.getElementById('micBtn').className = 'mic-btn';
-    document.getElementById('inputBox').className = 'input-box';
+    stopRecognition();
     return;
   }
 
@@ -531,14 +540,19 @@ function toggleRecording() {
   };
 
   recognition.onerror = () => {
+    manualStop = false; // 에러 후 플래그 초기화
     isRecording = false;
     document.getElementById('micBtn').className = 'mic-btn';
     document.getElementById('inputBox').className = 'input-box';
+    document.getElementById('mainInput').placeholder = '아이디어를 입력하세요...';
   };
   recognition.onend = () => {
+    // manualStop이면 stopRecognition()이 이미 UI 처리 완료 — 자동 재시작 차단
+    if (manualStop) { manualStop = false; return; }
     isRecording = false;
     document.getElementById('micBtn').className = 'mic-btn';
     document.getElementById('inputBox').className = 'input-box';
+    document.getElementById('mainInput').placeholder = '아이디어를 입력하세요...';
   };
 
   recognition.start();
