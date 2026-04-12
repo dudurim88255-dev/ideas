@@ -531,6 +531,8 @@ function toggleRecording() {
   const existingText = input.value;
 
   recognition.onresult = (event) => {
+    // 수동 종료 후 비동기로 날아오는 마지막 결과 무시
+    if (manualStop) return;
     let transcript = '';
     for (let i = 0; i < event.results.length; i++) {
       transcript += event.results[i][0].transcript;
